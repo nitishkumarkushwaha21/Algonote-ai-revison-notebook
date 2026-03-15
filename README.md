@@ -1,6 +1,7 @@
 # AlgoNote AI
 
 A full-stack DSA revision platform that helps you:
+
 - Organize problems like a mini IDE
 - Import real LeetCode questions in seconds
 - Write brute/better/optimal approaches side-by-side
@@ -24,17 +25,20 @@ AlgoNote brings everything into one workflow:
 ## Main Features
 
 ### 1. Smart Problem Workspace
+
 - Monaco-powered code editor
 - Separate tabs for Brute, Better, Optimal
 - Per-problem notes
 - Difficulty, tags, and metadata storage
 
 ### 2. File Explorer Style Organization
+
 - Folder/file tree inspired by IDE explorers
 - Nested structures for topics and sheets
 - Rename, delete, and revision state management
 
 ### 3. LeetCode Import
+
 - Paste a LeetCode URL
 - Automatically fetch:
   - Title
@@ -44,18 +48,21 @@ AlgoNote brings everything into one workflow:
   - Topic tags
 
 ### 4. YouTube Playlist to Revision Sheet
+
 - Paste a playlist URL
 - System maps each video to likely LeetCode problems
 - Creates a structured sheet with links and metadata
 - One-click import into explorer as ready-to-practice files
 
 ### 5. Profile Analysis and Recommendations
+
 - Analyze LeetCode profile stats
 - Highlight weak areas
 - Generate topic-wise recommendations
 - Import weak-area questions directly into explorer
 
 ### 6. Auth + User-Scoped Data
+
 - Clerk-based authentication in frontend
 - Token-based API calls
 - User-aware file tree loading
@@ -142,6 +149,7 @@ sequenceDiagram
 ## Tech Stack
 
 ### Frontend
+
 - React (Vite)
 - React Router
 - Zustand
@@ -152,6 +160,7 @@ sequenceDiagram
 - Clerk
 
 ### Backend
+
 - Node.js + Express microservices
 - API Gateway with proxy routing
 - Sequelize + PostgreSQL
@@ -159,6 +168,7 @@ sequenceDiagram
 - Service-to-service HTTP with Axios
 
 ### External Integrations
+
 - LeetCode GraphQL API
 - YouTube Data API v3
 - OpenRouter (LLM model routing)
@@ -205,18 +215,22 @@ cd ../profile-analysis-service && npm install
 ```
 
 ### 2. Configure environment
+
 Create required `.env` files for:
+
 - database credentials
 - API keys (LeetCode/OpenRouter/YouTube/OpenAI/Clerk as applicable)
 
 ### 3. Run locally
 
 Backend (all services):
+
 ```bash
 npm run start:backend
 ```
 
 Frontend:
+
 ```bash
 cd client
 npm run dev
@@ -224,15 +238,28 @@ npm run dev
 
 ---
 
-## Docker
+## Docker (Updated)
 
-Use Docker Compose to run the full stack:
+### Local Docker Build
+
+Use this when you want to build images from source on your machine:
 
 ```bash
 docker compose up --build
 ```
 
-Services include:
+### AWS/Production Docker Run
+
+Use the prebuilt image compose file for server deployment:
+
+```bash
+docker compose -f docker-compose.aws.yml up -d
+```
+
+The AWS compose file is image-only and uses restart policies for stable long-running environments.
+
+### Services in Docker Stack
+
 - client
 - gateway
 - file-service
@@ -241,6 +268,83 @@ Services include:
 - youtube-playlist-service
 - profile-analysis-service
 - mongodb
+
+---
+
+## AWS Deployment (EC2)
+
+This repo now includes an EC2-oriented deployment path:
+
+- `deploy/aws/ec2/setup-ec2.sh` - one-time Docker + Compose installation on Ubuntu EC2
+- `deploy/aws/ec2/deploy.sh` - pull latest images and redeploy services
+- `.github/workflows/deploy-aws-ec2.yml` - optional GitHub Actions deployment over SSH
+
+### 1. Launch EC2
+
+Recommended:
+
+- Ubuntu 22.04 LTS
+- t3.large or above
+- 30GB+ storage
+
+Security group inbound:
+
+- 22 (SSH)
+- 80 (HTTP)
+- 443 (HTTPS, if TLS is configured)
+
+### 2. Prepare Server
+
+```bash
+chmod +x deploy/aws/ec2/setup-ec2.sh
+./deploy/aws/ec2/setup-ec2.sh
+```
+
+Then log out and log in again so docker group permissions apply.
+
+### 3. Clone + Configure
+
+```bash
+sudo mkdir -p /opt/algonote
+sudo chown -R $USER:$USER /opt/algonote
+cd /opt/algonote
+git clone <your-repo-url> .
+```
+
+Create required env files on the server:
+
+- root `.env`
+- `backend/services/ai-service/.env`
+- `backend/services/youtube-playlist-service/.env`
+
+### 4. Deploy Containers
+
+```bash
+chmod +x deploy/aws/ec2/deploy.sh
+./deploy/aws/ec2/deploy.sh
+```
+
+### 5. Verify
+
+```bash
+docker compose -f docker-compose.aws.yml ps
+docker compose -f docker-compose.aws.yml logs -f gateway
+```
+
+### 6. Optional CI/CD via GitHub Actions
+
+If you use `.github/workflows/deploy-aws-ec2.yml`, configure these repo secrets:
+
+- `AWS_EC2_HOST`
+- `AWS_EC2_USER`
+- `AWS_EC2_SSH_KEY`
+
+Deployment workflow behavior:
+
+- Trigger on push to `main` or manual dispatch
+- SSH into EC2
+- Pull latest code
+- Run deploy script
 
 ---
 
@@ -262,6 +366,7 @@ Services include:
 ## Current Direction
 
 This project is evolving into a complete interview-prep operating system:
+
 - structured practice generation
 - integrated solving and note-taking
 - feedback loops from profile analytics
